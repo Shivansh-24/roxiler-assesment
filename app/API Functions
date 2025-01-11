@@ -1,0 +1,32 @@
+// API Functions
+        async function makeRequest(action, table, data = null, id = null) {
+            const userId = localStorage.getItem('userId') || 'user_' + Date.now();
+            if (!localStorage.getItem('userId')) {
+                localStorage.setItem('userId', userId);
+            }
+
+            const requestBody = {
+                userId,
+                appSlug: 'store-rating-app',
+                action,
+                table,
+                data
+            };
+
+            if (id) requestBody.id = id;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AUTH_TOKEN}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }

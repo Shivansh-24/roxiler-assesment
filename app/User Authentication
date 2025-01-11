@@ -1,0 +1,56 @@
+// User Authentication
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading();
+
+            try {
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+
+                const response = await makeRequest('read', 'users', { email });
+                
+                if (response.data && response.data.length > 0) {
+                    const user = response.data[0];
+                    if (user.data.password === password) {
+                        currentUser = user;
+                        showDashboard();
+                    } else {
+                        alert('Invalid credentials');
+                    }
+                } else {
+                    alert('User not found');
+                }
+            } catch (error) {
+                alert('Login failed');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading();
+
+            try {
+                const userData = {
+                    name: document.getElementById('signupName').value,
+                    email: document.getElementById('signupEmail').value,
+                    password: document.getElementById('signupPassword').value,
+                    address: document.getElementById('signupAddress').value,
+                    role: document.getElementById('signupRole').value
+                };
+
+                await makeRequest('create', 'users', userData);
+                alert('Registration successful!');
+                showLogin();
+            } catch (error) {
+                alert('Registration failed');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        function logout() {
+            currentUser = null;
+            showLogin();
+        }

@@ -1,0 +1,80 @@
+// Store Management
+        async function loadStores() {
+            showLoading();
+            try {
+                const response = await makeRequest('read', 'stores');
+                const storesContainer = document.getElementById('storesList');
+                storesContainer.innerHTML = '';
+
+                if (response.data) {
+                    response.data.forEach(store => {
+                        const storeCard = createStoreCard(store);
+                        storesContainer.appendChild(storeCard);
+                    });
+                }
+            } catch (error) {
+                alert('Failed to load stores');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function createStoreCard(store) {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-lg shadow-lg p-6';
+            
+            const averageRating = calculateAverageRating(store.data.ratings || []);
+            
+            div.innerHTML = `
+                <h3 class="text-xl font-semibold mb-2">${store.data.name}</h3>
+                <p class="text-gray-600 mb-2">${store.data.address || 'No address provided'}</p>
+                <div class="flex items-center mb-4">
+                    <span class="text-yellow-400 text-lg mr-2">★</span>
+                    <span>${averageRating.toFixed(1)}</span>
+                </div>
+                ${currentUser && currentUser.data.role === 'Normal User' ? `
+                    <div class="flex items-center space-x-2">
+                        <select class="rating-select border rounded px-2 py-1">
+                            ${[1,2,3,4,5].map(num => `
+                                <option value="${num}">${num} Star${num > 1 ? 's' : ''}</option>
+                            `).join('')}
+                        </select>
+                        <button onclick="rateStore('${store.id}', this.previousElementSibling.value)" 
+                                class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600">
+                            Rate
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            return div;
+        }
+
+        function calculateAverageRating(ratings) {
+            if (!ratings.length) return 0;
+            return ratings.reduce((acc, curr) => acc + Number(curr.rating), 0) / ratings.length;
+        }
+
+        async function rateStore(storeId, rating) {
+            showLoading();
+            try {
+                const store = (await makeRequest('read', 'stores', null, storeId)).data[0];
+                const ratings = store.data.ratings || [];
+                ratings.push({
+                    userId: currentUser.id,
+                    rating: Number(rating)
+                });
+                
+                await makeRequest('update', 'stores', { ...store.data, ratings }, storeId);
+                await loadStores();
+            } catch (error) {
+                alert('Failed to rate store');
+            } finally {
+                hideLoading();
+            }
+        }
+
+// Initialize the app
+        showLogin();
+    </script>
+</body>
+</html>
